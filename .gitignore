@@ -1,0 +1,160 @@
+
+# ==========================================
+# RNN Voice Stability Monitor ASIC
+# ==========================================
+
+# ------------------------------------------
+# Existing project exclusions
+# ------------------------------------------
+build/
+reports/
+waveforms/
+gds/
+config/tech_config.mk
+
+# ------------------------------------------
+# Python cache and virtual environments
+# ------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+.python-version
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.venv/
+venv/
+env/
+ENV/
+
+# ------------------------------------------
+# Verilator generated files
+# ------------------------------------------
+obj_dir/
+obj_*/
+Vobj_dir/
+*.vcd
+*.fst
+*.lxt
+*.lxt2
+*.vpd
+
+# ------------------------------------------
+# Simulation work directories
+# ------------------------------------------
+simv
+simv.daidir/
+csrc/
+INCA_libs/
+xcelium.d/
+xrun.history
+xrun.log
+waves.shm/
+*.shm/
+*.trn
+*.dsn
+*.wlf
+transcript
+work/
+worklib/
+questa_work/
+modelsim.ini
+vsim.wlf
+
+# ------------------------------------------
+# Generated synthesis artifacts
+# ------------------------------------------
+*.ddc
+*.syn
+*.synth.v
+*.mapped.v
+*.netlist.v
+*.edf
+*.edif
+
+# ------------------------------------------
+# Generated physical-design databases
+# ------------------------------------------
+*.enc
+*.odb
+*.db
+*.spef
+*.sdf
+*.sdc.backup
+*.def.backup
+*.gds
+*.gdsii
+*.oas
+*.oasis
+
+# ------------------------------------------
+# Temporary Cadence / Innovus / Tempus /
+# Voltus working files
+# ------------------------------------------
+INNOVUS/
+innovus_work/
+genus_work/
+tempus_work/
+voltus_work/
+*.cmdLog
+*.logv
+*.history
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
+
+# ------------------------------------------
+# Compiled objects and executables
+# ------------------------------------------
+*.o
+*.obj
+*.a
+*.so
+*.dll
+*.exe
+*.out
+
+# ------------------------------------------
+# Local secrets and machine-specific files
+# ------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+credentials/
+config/local.*
+config/private.*
+
+# ------------------------------------------
+# Operating system files
+# --------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ------------------------------------------
+# Editor and IDE files
+# ------------------------------------------
+.vscode/
+.idea/
+*.code-workspace
+*.sublime-workspace
+*.sublime-project
+
+# ------------------------------------------
+# Temporary files
+# ------------------------------------------
+*.orig
+*.rej
+*.cache
+*.pid
+*.seed

@@ -1,0 +1,18 @@
+name: RTL regression
+on: [push, pull_request]
+jobs:
+  rtl:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install public verification tools
+        run: sudo apt-get update && sudo apt-get install -y iverilog verilator ripgrep
+      - name: Python, simulation and lint
+        run: make test reports
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: verification-evidence
+          path: |
+            reports/
+            waveforms/

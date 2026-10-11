@@ -1,0 +1,50 @@
+# Verification architecture and acceptance plan
+
+This is a pre-implementation plan. Only the existing Python checks and stored-fixture consistency checks listed in architecture_audit.md ran in Phase 1. All target tests below are NOT RUN. Tool availability is not execution evidence.
+
+## Model and test infrastructure
+
+After architecture approval, build three distinct models: floating reset-before GRU with learned head; quantized model using exact integer scale/rounding rules but mathematical activations to isolate quantization; bit-exact model using frozen LUT images, EMA, CSR/flush/IRQ semantics. Optional fourth ablation substitutes LUTs into the floating model to measure approximation separately. Shared weights are exported once with dimensions, feature normalization, call boundaries, version, scales, gate convention, byte order and hashes. Testbench must not generate expected values by copying RTL expressions alone.
+
+Use cocotb with Python scoreboard and SV assertions for the original problem's requested framework. Icarus/vvp and Verilator are discoverable now; validate their versions and supported interfaces later. Xcelium is preferred when licensed, with release-compatible cocotb/VPI or an equivalent UVM scoreboard if integration requires it. Portable SV file-based vectors remain a fallback/debug aid, but alone do not satisfy the original cocotb/UVM wording. NumPy/training packages are future dependencies, not installed or changed here. Existing benches are useful prototype checks and require explicit migration after approval.
+
+Vectors: a manifest identifies I,H,weights/biases/LUT hashes and arithmetic version; records contain frame ID, call ID, signed integer feature lanes, event cycle offsets, controls/flush/reset, expected z/r/q/n/h, preactivations, score/average/alert, IRQ bits and saturation flags. Maintain a transaction model of accepted transfers; same files drive Python and RTL. Compare integer checkpoints with zero tolerance. Assign aborted frames explicit terminal status so they cannot disappear silently. Capture only selected traces in long runs, but compare every output and hidden vector.
+
+## Tests and pass/fail criteria
+
+| ID | Test / stimulus | Pass criteria |
+|---|---|---|
+| T-ARITH | signed 8-bit weight extremes, signed 16-bit features, full signed 32-bit biases, all rounding half ties with ±sign, signed minimum magnitude, clamp edges; randomized dot products up to48 terms | exact integer product/accumulator/requantization; no 40-bit overflow; expected SAT only; legal h invariant |
+| T-LUT | all 65536 signed preactivation inputs, sign endpoints, address half ties, mathematical comparison | bit-exact ROM oracle, monotonic, sigmoid complement/tanh odd symmetry, ranges; max errors≤0.0021 and≤0.0080; report RMS/max |
+| T-GRU | zero input/state, sparse one-hot coefficient matrices, isolated W/U paths, known biases, asymmetric gates, many seeded random matrices/features | exact z/r/q/n/h against oracle; reset-before convention and update polarity distinguishable; full old vector used |
+| T-SCHED | trace every weight address/operand/gate/neuron/term; poison stale scratch; delayed memory-valid fault injection | 3H(I+H)+H matrix terms and3H elementwise multiplies; no read-before-write; no illegal internal stall; one multiplier ownership |
+| T-STATE | identical frames in long single call versus individually flushed calls; perturb one hidden component | persistent result differs where expected; h only changes at commit/reset/flush/load-begin; atomic update |
+| T-FLUSH | request idle and each FSM phase including commit/publish, coincident ingress, flush while disabled, repeated command and loading conflict | deferred effect exactly matches contract; no aborted-frame DONE; zero per-call history; model preserved; FLUSH_DONE sticky; next call matches fresh oracle |
+| T-RESET | synchronous reset in every phase, during load, at completion, while IRQ asserted; deassert then reload | all reset fields exact; no stale completion/state; model invalid until complete reload; deterministic recovery |
+| T-SCORE | one-hot learned output weights, extreme bias/head inputs, zero head, consecutive different frames | correct shared head projection, UQ0.16 range/holding semantics, no use of old h |
+| T-EMA | first sample, invalid cycles, K0…8, positive/negative differences, half ties, endpoints, deadband, K reconfiguration | exact average with zero tolerance, updates once per success, no divider in implementation |
+| T-ALERT | averages below/equal/inside/above band, alternating values, startup, flush, invalid threshold pair and writes | strict crossings, equality holds, no oscillation inside band, no live-write spurious transition; reject invalid pair atomically |
+| T-AXIS | randomized gaps/backpressure, held valid and stable data, disabled/model-invalid input, continuous queued frames, reset/flush collisions | each valid&&ready creates exactly one transaction; no overwrite/drop/duplicate; accepted frame unaffected by subsequent input |
+| T-CSR | every mapped register/access, unaligned/unmapped address, reserved bits, busy writes, ENABLE transitions, read during publish | exact permissions/reset/read values/errors; rejected request has no requested side effect and sets ERROR; next-cycle control effects |
+| T-LOAD | complete/incomplete images, bad sign extension, excessive words, order/endian patterns, reload, reset mid-load, enable early | all signed 8-bit coefficients match exported ordering; bias32 preserved; no execution before valid commit; successful model switch clears state |
+| T-IRQ | masked/unmasked events, clear/set same edge, simultaneous DONE/SAT/DEGRADE, flush/reset suppression, coalesced completions | sticky set wins W1C; irq equals masked status OR; frame count increments once per success and wraps modulo2^32 |
+| T-DIM | at least (8,16),(16,32),(9,17),(16,16),(8,32), then parameter/elaboration sweep all legal I,H; illegal range probes | legal counters/addresses/ports/images and exact model match; illegal elaborations explicitly rejected |
+| T-LATENCY | baseline and max dimensions, extremes, enabled change mid-frame, queued input | accept→frame_done≤C(I,H)+1 and <1ms at declared clock; aborted frames excluded with explicit cancellation record |
+| T-STREAM |360000 accepted frames,100fps one-hour equivalent, no periodic hidden reset, realistic and adversarial traces;180000-frame50fps mode | every score/state/average/IRQ matches; accepted=completed+aborted+inflight; no drift/counter corruption/timeout; persistent state across all frames |
+| T-QUALITY | representative held-out voice impairment scenarios, float/quantized/bit-exact predictions and alerts | report MAE/max/RMSE/correlation loss/clipping and FP/FN/delay; proposed numerical acceptance targets require dataset-owner approval |
+| T-PPA | lint, synthesis/netlist, timing and optional physical stages | no unresolved cells/latches/unreviewed severe warnings, no variable divider, intended single multiply resource, timing constraints complete; measured positive timing margin at target corners |
+| T-POWER | matched continuous100fps/50fps workloads, idle and active windows, annotated VCD/SAIF and gated netlist | publish activity coverage, clock/voltage/process/temp/model/workload, dynamic+leakage and energy/frame; assess low-mW goal without invented result |
+
+## Assertions and functional coverage
+
+Temporal properties: stalled input producer holds valid/data (environment assertion); !ready prevents capture; busy implies no admission; every accepted transaction reaches completion within bound unless explicit reset/flush abort; done one-cycle and never for canceled work; score/average stable between publications except clear; h stable outside commit/clear; old h unchanged during dot computations; candidate starts after every q valid; next-state fully valid before commit; addresses in bounds; weights sign-extend correctly; no X on valid outputs; accumulator stays proven range; initialized qualifies alert; irq equation always holds; set dominates W1C; legal configuration retained on errors. Gating verification proves state equivalent with enables/gates active and test-enable can force clocks where required by the chosen DFT flow.
+
+Collect state/transition, gate/neuron/term, rounding sign/tie, saturation source, threshold relationship, CSR error, flush/reset phase and dimension coverage. Cross flush×phase, reset×load/compute, IRQ×mask/W1C, ready×valid×enable/model-valid. Require every planned functional bin or reviewed justified exclusion; no unexplained assertion failure or scoreboard mismatch. Use fixed logged random seeds plus independent additional seeds; coverage closure, not an arbitrary number of seeds, governs completion.
+
+## One-hour methodology
+
+360000 frames at10ms is one hour of logical calls, not one hour of wall-clock test execution. Run every actual compute cycle; idle gaps may be accelerated only because the synchronous design has no idle timer and state is specified invariant when idle. Document compressed idle time explicitly. Separately run representative full-cadence gaps with clock/enable checks, and collect actual10ms/20ms duty-cycle activity windows for power; never use compressed-idle activity to claim average call power. Verify the same oracle state over the full frame sequence. Long test includes degraded intervals and recovery but retains one call context; separate reset/flush stress stream exercises cancellations. FRAME_COUNT wrap uses forced/preloaded test state or a dedicated reduced-width verification harness; a one-hour run does not reach2^32.
+
+## Evidence package
+
+Record source, LUT, vectors and model hashes, tool versions, command/config, dimensions/clock, seeds, test totals, actual pass/fail logs, coverage and measured cycle distribution. Separate Python pass, RTL pass, lint review, mapped synthesis, STA, power estimate and post-route/signoff. A PASS marker or file's existence alone cannot establish all of them. Save failures with reproducible minimal vectors. No simulation or physical metric may be promoted from an estimate to a result without its evidence.
