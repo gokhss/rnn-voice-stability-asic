@@ -285,3 +285,17 @@ Before final submission, ensure the README, source revision, logs, and report re
 ## License and third-party dependencies
 
 See [`LICENSE`](LICENSE) for the repository's source-code license. Cadence tools, GPDK90 technology data, standard-cell libraries, and other licensed EDA/PDK assets are not included in the source repository and are not granted by the project license.
+
+## Cadence Implementation Screenshots
+
+### Original RNN Netlist — Cadence Genus
+
+![Original RNN netlist](images/implementation/RNN_NETLIST.png)
+
+### Clock-Gated RNN Netlist — Cadence Genus
+
+![Clock-gated RNN netlist](images/implementation/CLOCK_GATED_NETLIST.png)
+
+### Post-Routing Physical Design — Cadence Innovus
+
+![Post-routing physical design](images/implementation/POST_ROUTING_PD.png)
