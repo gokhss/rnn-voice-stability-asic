@@ -1,0 +1,36 @@
+{
+  "stages": {
+    "simulation": "NOT RUN / BLOCKED",
+    "lint": "NOT RUN / BLOCKED",
+    "synthesis": "NOT RUN / BLOCKED",
+    "sta": "NOT RUN / BLOCKED",
+    "pnr": "NOT RUN / BLOCKED",
+    "gds": "NOT RUN / BLOCKED",
+    "signoff_wrappers": "NOT RUN / BLOCKED"
+  },
+  "metrics": {
+    "clock_frequency": "NOT MEASURED",
+    "cell_area": "NOT MEASURED",
+    "cell_count": "NOT MEASURED",
+    "power": "NOT MEASURED",
+    "WNS": "NOT MEASURED",
+    "TNS": "NOT MEASURED",
+    "setup_violations": "NOT MEASURED",
+    "hold_violations": "NOT MEASURED",
+    "processing_latency_cycles": "NOT MEASURED",
+    "frame_throughput": "NOT MEASURED",
+    "DRC_violations": "NOT MEASURED",
+    "LVS_status": "NOT MEASURED"
+  },
+  "baseline": {
+    "inputs": 8,
+    "hidden": 8,
+    "precision_bits": 16,
+    "clock_target_MHz": 50
+  },
+  "evidence": {},
+  "activation_errors": {
+    "sigmoid_max_abs_error": 0.01807698997125361,
+    "tanh_max_abs_error": 0.03614531386627384
+  }
+}
