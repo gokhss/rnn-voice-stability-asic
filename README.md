@@ -49,6 +49,24 @@ flowchart TD
     I --> J[Score, average and alert outputs]
 ```
 
+## Cadence implementation screenshots
+
+The following screenshots show the original Genus netlist view, the clock-gated Genus netlist view, and the post-routing physical-design view.
+
+### Original RNN netlist — Cadence Genus
+
+![Original RNN netlist in Cadence Genus](images/implementation/RNN_NETLIST.png)
+
+### Clock-gated RNN netlist — Cadence Genus
+
+![Clock-gated RNN netlist in Cadence Genus](images/implementation/CLOCK_GATED_NETLIST.png)
+
+### Post-routing physical design — Cadence Innovus
+
+![Post-routing physical-design view in Cadence Innovus](images/implementation/POST_ROUTING_PD.png)
+
+> **Note:** These are tool screenshots for visual documentation. Refer to the synthesis and post-route reports below for the reported quantitative metrics.
+
 ### GRU equations
 
 The report describes a reset-before GRU. The update and reset gates are computed as:
